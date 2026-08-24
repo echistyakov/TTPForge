@@ -22,6 +22,7 @@ package backends
 import (
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -107,19 +108,19 @@ func (fs *SFTPFs) RemoveAll(path string) error {
 	}
 	// Remove in reverse order (deepest first)
 	var errs []string
-	for i := len(paths) - 1; i >= 0; i-- {
-		info, err := fs.client.Stat(paths[i])
+	for _, path := range slices.Backward(paths) {
+		info, err := fs.client.Stat(path)
 		if err != nil {
-			errs = append(errs, fmt.Sprintf("stat %s: %v", paths[i], err))
+			errs = append(errs, fmt.Sprintf("stat %s: %v", path, err))
 			continue
 		}
 		if info.IsDir() {
-			if err := fs.client.RemoveDirectory(paths[i]); err != nil {
-				errs = append(errs, fmt.Sprintf("rmdir %s: %v", paths[i], err))
+			if err := fs.client.RemoveDirectory(path); err != nil {
+				errs = append(errs, fmt.Sprintf("rmdir %s: %v", path, err))
 			}
 		} else {
-			if err := fs.client.Remove(paths[i]); err != nil {
-				errs = append(errs, fmt.Sprintf("rm %s: %v", paths[i], err))
+			if err := fs.client.Remove(path); err != nil {
+				errs = append(errs, fmt.Sprintf("rm %s: %v", path, err))
 			}
 		}
 	}
